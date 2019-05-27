@@ -1,6 +1,5 @@
 # coding = utf-8
 
-
 import os
 import sys
 import ADBAction
@@ -8,7 +7,8 @@ import time
 import threading
 import cv2
 import schedule
-import threadpool
+import random
+
 
 imgAppMain = cv2.imread("pict/main.jpg", 0)
 imgAd1 = cv2.imread("pict/ad1.jpg", 0)
@@ -17,6 +17,25 @@ imgAd2 = cv2.imread("pict/ad2.jpg", 0)
 
 def swipe(device):
     ADBAction.swipeXY(device, 648, 1246, 648, 904)
+
+def refresh(device):
+    ADBAction.clickXY(device, 146, 1849)
+
+def checkAPPUI(device):
+    # 检测是否进入应用
+    currentActivity = ADBAction.getCurrentActivity(device)
+    if currentActivity.find("com.jifen.qukan/com.jifen.qkbase.main.MainActivity") >= 0:
+        print("[设备]-" + device + " 设备还在app界面........")
+        return
+    elif currentActivity.find("com.jifen.qukan/.content.newsdetail.video.VideoNewsDetailNewActivity") >= 0:
+        print("[设备]-" + device + " 设备还在app界面........")
+        return
+    else:
+        print("[设备]-" + device + " 设备没有打开app，开始启动app.........")
+        # 获取设备信息
+        ADBAction.getDevicesInfo(device)
+        # 打开应用
+        ADBAction.startActivitySingleDevice("com.jifen.qukan/com.jifen.qkbase.main.MainActivity", device)
 
 
 def rewardClick(device):
@@ -33,27 +52,36 @@ def swipeNews(device):
 
 
 def commontNews(device):
-    ADBAction.clickXY(device, 592, 1825)
-    ADBAction.clickXY(device, 314, 1828)
     i = range(5)
     if i == 2:
+        ADBAction.clickXY(device, 592, 1825)
+        ADBAction.clickXY(device, 314, 1828)
+        print("[设备]-" + device + " 评论新闻中.........")
         ADBAction.inputText(device, "VeryGood")
-    ADBAction.clickXY(device, 982, 1698)
-    ADBAction.actionBack(device)
-    ADBAction.clickXY(device, 943, 1765)
+        ADBAction.clickXY(device, 982, 1698)
+        ADBAction.actionBack(device)
+        ADBAction.clickXY(device, 943, 1765)
 
 
 def clickNews(device):
+    # 初始化阅读时间
+    readNewsTime = 50
+    # 点击新闻
     ADBAction.clickXY(device, 648, 1246)
+    # 等待2s的加载时间 防止卡顿
+    time.sleep(2)
+    # 设定起始阅读时间
     startTime = time.time()
     # 阅读30s新闻
-    while (time.time() - startTime) < 20:
-        ADBAction.swipeXY(device, 648, 1246, 648, 904)
-    while (time.time() - startTime) < 20:
-        ADBAction.swipeXY(device, 648, 904, 648, 1246)
+    while (time.time() - startTime) < readNewsTime:
+        print("[设备]-" + device + " 观看" + str(time.time() - startTime) + "新闻中.........")
+        randomNum = random.randint(100, 300)
+        ADBAction.swipeXY(device, 648, 1100+randomNum, 648, 904)
+        ADBAction.swipeXY(device, 648, 904, 648, 1246+randomNum)
+    # 随机评论新闻
     commontNews(device)
     time.sleep(2)
-    ADBAction.actionBack(device)
+    # 返回主界面
     ADBAction.actionBack(device)
 
 
@@ -68,8 +96,7 @@ def init():
 
 
 def start(device):
-
-    if (ADBAction.getScreenStatus(device)==True):
+    if (ADBAction.getScreenStatus(device) == True):
         # 强制点亮屏幕 并且解锁设备
         print("[设备]-" + device + " 设备在锁屏界面，开始解锁.........")
         ADBAction.lightDevice(device)
@@ -120,16 +147,19 @@ def running(device):
     ADBAction.actionBack(device)
     ADBAction.clickXY(device, 146, 1849)
     # 开始刷流程
-    schedule.every(30).minutes.do(rewardClick, device)
+    schedule.every(2).minutes.do(rewardClick, device)
+    schedule.every(3).minutes.do(checkAPPUI, device)
+    schedule.every(30).minutes.do(refresh, device)
     while True:
         schedule.run_pending()
         startTime = time.time()
-        # 阅读30s新闻
-        while (time.time()-startTime) < 30:
+        # 阅读5s大类
+        while (time.time() - startTime) < 3:
             swipeNews(device)
-            print("[设备]-" + device + " 阅读"+str(time.time()-startTime)+"中.........")
-        print("[设备]-" + device + " 观看新闻中.........")
+            print("[设备]-" + device + " 阅读主界面" + str(time.time() - startTime) + "中.........")
+        time.sleep(1)
         clickNews(device)
+
 
 def mainExcute(device):
     # 改为每一个手机单独开启线程 并发执行
@@ -138,9 +168,11 @@ def mainExcute(device):
     cv(device)
     running(device)
 
+
 def prints(str):
     print(str)
     time.sleep(1)
+
 
 if __name__ == '__main__':
     devices = init()

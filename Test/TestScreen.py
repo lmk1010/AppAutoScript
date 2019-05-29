@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 import ADBAction
-import PropertiesUtil
+from PropertiesUtil import Properties
 import os
 
 # devices = ADBAction.getDevices()
@@ -9,7 +9,9 @@ import os
 # for device in devices:
 #     ADBAction.getSceenSnapshot(device)
 
-# props = PropertiesUtil.Properties("../Properties/app.properties").getProperties()
-# print(props.get("qutoutiao"))
-# print(props)
+configProps = Properties("../Properties/common.properties").getProperties()
+twe = configProps.get("qttActs").split(",")
+for srt in twe:
+    print(srt)
+
 

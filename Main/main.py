@@ -1,24 +1,63 @@
+# coding = utf-8
+
 import os
-import time
-import ADBAction
 import sys
+import ADBAction
+import time
+import threading
+import cv2
+import schedule
+from PropertiesUtil import Properties
+import random
+import inspect
+import ctypes
+import mayitoutiao
+import qutoutiao
 
-roundTime = 60*60
-while 1:
-    # 设定起始阅读时间
+
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
+    print("结束线程")
+
+
+
+if __name__ == '__main__':
+    devices = qutoutiao.init()
+    threads = []
+    for device in devices:
+        threads.append(threading.Thread(target=qutoutiao.mainExcute, args=(device,)))
+
+    for t in threads:
+        t.start()
+        print("开启线程QuTou---")
     startTime = time.time()
-    # 阅读30s新闻
-    while (time.time() - startTime) < roundTime:
-        os.system("python3 ../MaYi/mayitoutiao.py")
 
-    time.sleep(5)
+    while 1:
+        if (time.time() - startTime) > 60:
+            for t in threads:
+                stop_thread(t)
 
-    # 设定起始阅读时间
-    startTime1 = time.time()
-    # 阅读30s新闻
-    while (time.time() - startTime1) < roundTime:
-        os.system("python3 ../QuTouTiao/qutoutiao.py")
+    for device in devices:
+        threads.append(threading.Thread(target=mayitoutiao.mainExcute, args=(device,)))
 
+    for t in threads:
+        t.start()
+        print("开启线程MaYi---")
 
 
 

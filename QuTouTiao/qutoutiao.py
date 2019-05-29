@@ -8,7 +8,8 @@ import threading
 import cv2
 import schedule
 import random
-
+import inspect
+import ctypes
 
 imgAppMain = cv2.imread("pict/main.jpg", 0)
 imgAd1 = cv2.imread("pict/ad1.jpg", 0)
@@ -79,7 +80,7 @@ def clickNews(device):
         ADBAction.swipeXY(device, 648, 1100+randomNum, 648, 904)
         ADBAction.swipeXY(device, 648, 904, 648, 1246+randomNum)
     # 随机评论新闻
-    commontNews(device)
+    # commontNews(device)
     time.sleep(2)
     # 返回主界面
     ADBAction.actionBack(device)
@@ -100,6 +101,7 @@ def start(device):
         # 强制点亮屏幕 并且解锁设备
         print("[设备]-" + device + " 设备在锁屏界面，开始解锁.........")
         ADBAction.lightDevice(device)
+
     # 检测是否进入应用
     currentActivity = ADBAction.getCurrentActivity(device)
     if currentActivity.find("com.jifen.qukan/com.jifen.qkbase.main.MainActivity") < 0:
@@ -174,6 +176,26 @@ def prints(str):
     time.sleep(1)
 
 
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def stop_thread(thread):
+    _async_raise(thread.ident, SystemExit)
+    print("结束线程")
+
+
 if __name__ == '__main__':
     devices = init()
     threads = []
@@ -182,3 +204,5 @@ if __name__ == '__main__':
 
     for t in threads:
         t.start()
+        print("开启线程---")
+

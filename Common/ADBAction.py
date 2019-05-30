@@ -53,7 +53,7 @@ def getDevicesInfo(device):
 # 4，获取当前activity 实际每5s刷新检测
 def getCurrentActivity(device):
     deviceCurrentActivity = str(
-        os.popen("adb -s " + device + " shell dumpsys activity activities | grep mFocusedActivity").read())
+        os.popen("adb -s " + device + " shell dumpsys activity activities | findstr mFocusedActivity").read())
     # 格式化
     deviceCurrentActivity = deviceCurrentActivity.strip()
     print("设备-" + device + " 当前Activity：" + deviceCurrentActivity)
@@ -70,7 +70,7 @@ def startActivity(activityName, devicesList):
             print("[设备]-"+device + " 开启app失败........")
 
 def getScreenStatus(device):
-    res = str(os.popen("adb -s " + device + " shell dumpsys window policy | grep mShowingLockscreen").read()).strip()
+    res = str(os.popen("adb -s " + device + " shell dumpsys window policy | findstr mShowingLockscreen").read()).strip()
     if res.find("mShowingLockscreen=true") >= 0:
         return True
     elif res.find("mShowingLockscreen=false") >= 0:

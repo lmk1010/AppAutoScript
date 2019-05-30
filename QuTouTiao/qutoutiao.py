@@ -74,6 +74,7 @@ def clickNews(device):
     # 设定起始阅读时间
     startTime = time.time()
     # 阅读30s新闻
+
     while (time.time() - startTime) < readNewsTime:
         print("[设备]-" + device + " 观看" + str(time.time() - startTime) + "新闻中.........")
         randomNum = random.randint(100, 300)

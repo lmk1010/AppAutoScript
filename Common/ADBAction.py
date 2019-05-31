@@ -125,4 +125,4 @@ def inputText(device, text):
 if __name__ == '__main__':
     devices = getDevices()
     for device in devices:
-        startActivitySingleDevice("com.huolea.bull/.page.other.activity.MainActivity", device)
+        getSceenSnapshot(device)

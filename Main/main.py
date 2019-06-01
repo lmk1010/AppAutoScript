@@ -56,13 +56,31 @@ def checkAPPUI(device, appActName, appActMain):
         ADBAction.startActivitySingleDevice(configProps.get(appActMain), device)
     print("[设备]-" + device + " 设备已成功开启app.........")
 # ---------------------------------------------------------------------------
-# -------------------Function:定时奖励----------------------------------------
+# qutoutiao-------------------Function:定时奖励----------------------------------------
 def rewardClick(device):
     # ---点击reward图标
     ADBAction.clickXY(device, 964, 157)
     # ---返回键
     ADBAction.clickSystemKey(4, device)
-# ---------------------------------------------------------------------------
+def app_qutou_video(device):
+    # ---新增视频模块
+    ADBAction.clickXY(device, 365, 1832)
+    # ---设定起始阅读时间
+    startVTime = time.time()
+    # ---阅6min视频
+    while (time.time() - startVTime) < 60 * 2:
+        print("[设备]-" + device + " 观看" + str(time.time() - startVTime) + "视频中.........")
+        # ---滑动随机的距离 防止行为检测 增加滑动的随机性
+        randomNum = random.randint(300, 600)
+        for i in range(random.randint(0, 3)):
+            # ---向下滑动新闻详情页
+            ADBAction.swipeXY(device, 648, 1100 + randomNum, 648, 904)
+            # ---点击视频
+            ADBAction.clickXY(device, 648, 1246)
+            # ---观看视频等待2min
+            time.sleep(60)
+# -------------------------------------
+# --------------------------------------
 
 
 
@@ -120,11 +138,13 @@ def app_qutoutiao(device):
     # ---此为app定时奖励
     schedule.every(2).minutes.do(rewardClick, device)
     # ---定时检测当前是否还在app界面
-    schedule.every(3).minutes.do(checkAPPUI, device, "qttActs", "qttActMain")
+    # schedule.every(5).minutes.do(checkAPPUI, device, "qttActs", "qttActMain")
     # ---定时忘记了。。。。。
     # schedule.every(30).minutes.do(refresh, device)
 
     while True:
+        # ----
+        checkAPPUI(device, "qttActs", "qttActMain")
         # ---开始定时器任务
         schedule.run_pending()
         # ---记录阅读新闻时间戳 每次循环刷新
@@ -159,8 +179,9 @@ def app_qutoutiao(device):
         time.sleep(2)
         # ---返回主界面 完成一个1分钟的流程
         ADBAction.actionBack(device)
+        ADBAction.actionBack(device)
         # ---检测如果此app刷新闻超过1小时 则退出死循环
-        if (time.time() - app_time) > 60*60:
+        if (time.time() - app_time) > 60*20:
             print("已经超过一小时准备退出当前界面")
             break
 
@@ -255,12 +276,14 @@ def app_weili(device):
             ADBAction.swipeXY(device, 648, 904, 648, 1246 + randomNum)
         # ---随机评论新闻 防止行为检测
         # commontNews(device)
+        # ---再做一次返回
+        ADBAction.actionBack(device)
         # ---歇2s
         time.sleep(2)
         # ---返回主界面 完成一个1分钟的流程
         ADBAction.actionBack(device)
         # ---检测如果此app刷新闻超过1小时 则退出死循环
-        if (time.time() - app_time) > 60*60:
+        if (time.time() - app_time) > 60*20:
             print("已经超过一小时准备退出当前界面")
             break
 
